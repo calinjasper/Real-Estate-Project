@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            Int         @id @default(autoincrement())
+  name          String
+  email         String      @unique
+  password      String
+  phone         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  properties    Property[]
+  inquiries     Inquiry[]   @relation("BuyerInquiries")
+  refreshTokens RefreshToken[]
+}
+
+model Property {
+  id             Int             @id @default(autoincrement())
+  title          String
+  description    String?
+  price          Float
+  city           String
+  state          String?
+  country        String?
+  address        String?
+  propertyType   String
+  bedrooms       Int
+  bathrooms      Float
+  area           Float?
+  ownerId        Int
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  owner          User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  propertyImages PropertyImage[]
+  inquiries      Inquiry[]
+
+  @@index([city])
+  @@index([price])
+  @@index([propertyType])
+  @@index([bedrooms])
+  @@index([ownerId])
+  @@index([city, propertyType])
+  @@index([city, price])
+}
+
+model PropertyImage {
+  id         Int      @id @default(autoincrement())
+  propertyId Int
+  imageUrl   String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+model Inquiry {
+  id         Int      @id @default(autoincrement())
+  propertyId Int
+  buyerId    Int
+  message    String
+  createdAt  DateTime @default(now())
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  buyer      User     @relation("BuyerInquiries", fields: [buyerId], references: [id], onDelete: Cascade)
+
+  @@unique([propertyId, buyerId])
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
