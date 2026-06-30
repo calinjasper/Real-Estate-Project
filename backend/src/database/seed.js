@@ -1,5 +1,8 @@
 require('dotenv').config();
 const bcrypt = require('bcrypt');
+const fs = require('fs');
+const path = require('path');
+const csv = require('csv-parser');
 const prisma = require('../config/prismaClient');
 
 const cities = [
@@ -45,6 +48,31 @@ const generateRandomProperty = (ownerId, index) => {
   };
 };
 
+const loadCSVData = () => {
+  return new Promise((resolve, reject) => {
+    const csvPath = path.join(__dirname, '../../data/properties.csv');
+    const results = [];
+
+    if (!fs.existsSync(csvPath)) {
+      console.log('CSV file not found, using random data');
+      resolve(null);
+      return;
+    }
+
+    fs.createReadStream(csvPath)
+      .pipe(csv())
+      .on('data', (data) => results.push(data))
+      .on('end', () => {
+        console.log(`Loaded ${results.length} properties from CSV`);
+        resolve(results);
+      })
+      .on('error', (err) => {
+        console.error('Error loading CSV:', err);
+        resolve(null);
+      });
+  });
+};
+
 const seed = async () => {
   try {
     console.log('Starting database seeding...');
@@ -70,29 +98,58 @@ const seed = async () => {
       users.push(user);
     }
 
-    console.log('Creating 50,000+ properties...');
-    const BATCH_SIZE = 500;
-    const TOTAL_PROPERTIES = 50000;
+    console.log('Loading properties...');
+    const csvData = await loadCSVData();
+    let properties = [];
 
-    for (let i = 0; i < TOTAL_PROPERTIES; i += BATCH_SIZE) {
-      const properties = [];
-      const end = Math.min(i + BATCH_SIZE, TOTAL_PROPERTIES);
-
-      for (let j = i; j < end; j++) {
+    if (csvData) {
+      // Use CSV data
+      for (let i = 0; i < csvData.length; i++) {
         const randomUser = users[Math.floor(Math.random() * users.length)];
-        properties.push(generateRandomProperty(randomUser.id, j));
+        const row = csvData[i];
+        properties.push({
+          title: row.title || generateRandomProperty(randomUser.id, i).title,
+          description: row.description,
+          price: parseFloat(row.price) || generateRandomProperty(randomUser.id, i).price,
+          city: row.city || 'Mumbai',
+          state: row.state,
+          country: row.country || 'India',
+          address: row.address,
+          propertyType: row.propertyType || 'Apartment',
+          bedrooms: parseInt(row.bedrooms) || 2,
+          bathrooms: parseFloat(row.bathrooms) || 2,
+          area: parseFloat(row.area),
+          ownerId: randomUser.id,
+          createdAt: new Date(Date.now() - Math.floor(Math.random() * 365 * 24 * 60 * 60 * 1000)),
+          updatedAt: new Date(),
+        });
       }
+    }
 
-      await prisma.property.createMany({ data: properties });
+    // If no CSV data or to add more properties, generate random ones
+    const TOTAL_PROPERTIES = Math.max(properties.length, 5000);
+    if (properties.length < TOTAL_PROPERTIES) {
+      console.log(`Generating additional ${TOTAL_PROPERTIES - properties.length} random properties...`);
+      for (let i = properties.length; i < TOTAL_PROPERTIES; i++) {
+        const randomUser = users[Math.floor(Math.random() * users.length)];
+        properties.push(generateRandomProperty(randomUser.id, i));
+      }
+    }
 
-      if (i % 5000 === 0) {
+    console.log('Creating properties in database...');
+    const BATCH_SIZE = 500;
+    for (let i = 0; i < properties.length; i += BATCH_SIZE) {
+      const batch = properties.slice(i, i + BATCH_SIZE);
+      await prisma.property.createMany({ data: batch });
+
+      if (i % 1000 === 0) {
         console.log(`Created ${i} properties...`);
       }
     }
 
     console.log('Database seeded successfully!');
     console.log(`- ${users.length} users created`);
-    console.log(`- ${TOTAL_PROPERTIES} properties created`);
+    console.log(`- ${properties.length} properties created`);
     console.log('\nTest credentials:');
     console.log('Email: user1@example.com');
     console.log('Password: password123');

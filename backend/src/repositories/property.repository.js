@@ -41,11 +41,12 @@ class PropertyRepository {
       minPrice,
       maxPrice,
       propertyType,
+      minBedrooms,
       bedrooms,
       page = 1,
       limit = 20,
-      sortBy = 'createdAt',
-      sortOrder = 'desc',
+      sortBy,
+      sortOrder,
     } = filters;
 
     const where = {};
@@ -68,8 +69,23 @@ class PropertyRepository {
       where.propertyType = propertyType;
     }
 
-    if (bedrooms !== undefined) {
+    if (minBedrooms !== undefined) {
+      where.bedrooms = { gte: parseInt(minBedrooms) };
+    } else if (bedrooms !== undefined) {
       where.bedrooms = parseInt(bedrooms);
+    }
+
+    let orderBy;
+    if (sortBy === 'price-asc') {
+      orderBy = { price: 'asc' };
+    } else if (sortBy === 'price-desc') {
+      orderBy = { price: 'desc' };
+    } else if (sortBy === 'date-desc') {
+      orderBy = { createdAt: 'desc' };
+    } else if (sortBy) {
+      orderBy = { [sortBy]: sortOrder || 'desc' };
+    } else {
+      orderBy = { createdAt: 'desc' };
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -88,9 +104,7 @@ class PropertyRepository {
           },
           propertyImages: true,
         },
-        orderBy: {
-          [sortBy]: sortOrder,
-        },
+        orderBy,
         skip,
         take: parseInt(limit),
       }),

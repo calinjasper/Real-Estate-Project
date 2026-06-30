@@ -15,9 +15,16 @@ const ApiError = require('./utils/ApiError');
 
 const app = express();
 
+const allowedOrigins = CORS_ORIGIN.split(',').map(origin => origin.trim());
 app.use(
   cors({
-    origin: CORS_ORIGIN,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new ApiError(403, 'Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );
