@@ -5,19 +5,12 @@ import { useAuthStore } from '@/store/authStore';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchCurrentUser = useAuthStore((state) => state.fetchCurrentUser);
-  const isLoading = useAuthStore((state) => state.isLoading);
 
   useEffect(() => {
+    // Check if user is logged in on app start (runs in background, doesn't block UI)
     fetchCurrentUser();
   }, [fetchCurrentUser]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
-      </div>
-    );
-  }
-
+  // Always render children — auth check happens in background
   return <>{children}</>;
 }

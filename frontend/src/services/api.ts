@@ -9,17 +9,37 @@ const api: AxiosInstance = axios.create({
   },
 });
 
+// Track if we're currently refreshing to avoid parallel refresh calls
+let isRefreshing = false;
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
+
+    // Never retry for auth endpoints — avoids infinite loops and noise
+    const isAuthEndpoint =
+      originalRequest?.url?.includes('/auth/refresh-token') ||
+      originalRequest?.url?.includes('/auth/login') ||
+      originalRequest?.url?.includes('/auth/register') ||
+      originalRequest?.url?.includes('/auth/logout') ||
+      originalRequest?.url?.includes('/auth/me');
+
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !isAuthEndpoint &&
+      !isRefreshing
+    ) {
       originalRequest._retry = true;
+      isRefreshing = true;
       try {
         await authService.refreshToken();
+        isRefreshing = false;
         return api(originalRequest);
       } catch (refreshError) {
-        console.error('Refresh token failed:', refreshError);
+        isRefreshing = false;
+        // Refresh failed — user session expired or unauthenticated
       }
     }
     return Promise.reject(error);

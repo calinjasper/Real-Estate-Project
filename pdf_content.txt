@@ -1,0 +1,115 @@
+Fullstack Developer Technical Assignment
+Overview
+Build a scalable real-estate listing platform inspired by:
+● 99acres
+● NoBroker
+The objective of this assignment is to evaluate:
+● Fullstack engineering skills
+● Backend architecture
+● Database design
+● API quality
+● Scalability thinking
+● Production-level development practices
+Mandatory Tech Stack
+Frontend
+● Next.js (App Router preferred)
+● Tailwind CSS
+Backend
+● Node.js
+● Express.js
+Database
+● PostgreSQL
+API Documentation
+● Swagger / OpenAPI
+Core Requirements
+1. Authentication Module
+Implement:
+● User registration
+● User login
+● JWT-based authentication
+● Protected APIs
+Candidate should decide:
+● token strategy
+● refresh token implementation
+● middleware structure
+2. Property Listing Module
+Authenticated users should be able to:
+● Create property listings
+● Edit their own listings
+● Delete their own listings
+● View all listings
+● View property details
+Candidate should design:
+● property schema
+● image handling approach
+● validation strategy
+● ownership handling
+3. Search & Filtering
+Implement:
+● Search by city/location
+● Filter by:
+○ budget
+○ property type
+○ bedrooms
+● Sorting
+● Pagination
+Important Requirement
+System should support:
+● 50,000+ property records efficiently
+Candidate is expected to think about:
+● database indexing
+● query optimization
+● API response optimization
+● scalable pagination strategy
+4. Similar Properties
+Property detail page should display:
+● similar properties recommendations
+Candidate should decide:
+● similarity algorithm
+● optimization strategy
+5. Lead / Inquiry Module
+Users should be able to contact property owners.
+System should prevent:
+● duplicate inquiries
+● spam submissions
+Candidate should explain:
+● validation approach
+● rate-limiting strategy
+● backend protection mechanisms
+6. SEO Optimization
+Property detail pages must be SEO-friendly.
+Candidate should decide:
+● SSR / ISR strategy
+● metadata generation
+● page optimization approach
+7. API Documentation
+Swagger/OpenAPI documentation is mandatory.
+Expose API docs at:
+/api-docs
+Frontend Expectations
+We evaluate:
+● clean UI architecture
+● reusable components
+● responsive design
+● proper loading/error states
+● API integration quality
+Backend Expectations
+We evaluate:
+● folder structure
+● middleware architecture
+● validation
+● error handling
+● scalable API design
+● security best practices
+Database Expectations
+We evaluate:
+● schema design
+● relationships
+● indexing strategy
+● optimized queries
+Constraints
+Do NOT use:
+● Firebase
+● Supabase
+● no-code generators
+● AI-generated boilerplate without understanding
